@@ -78,6 +78,7 @@ func (p *statsCommandProcessor) prepareWorkerStats(w *tabwriter.Writer) {
 	fmt.Fprintf(w, "Uptime: \t%s\n", getDurationString(avgDuration))
 	fmt.Fprintf(w, "Memory used: \t%s / %s (%s garbage collected)\n", humanize.Bytes(sumAllocMem), humanize.Bytes(sumSysMem), humanize.Bytes(sumTotalAllocMem))
 	fmt.Fprintf(w, "Concurrent tasks: \t%d\n", sumTasks)
+	fmt.Fprintf(w, "```\n")
 }
 
 func (p *statsCommandProcessor) prepareListenerStats(w *tabwriter.Writer) {
@@ -111,6 +112,7 @@ func (p *statsCommandProcessor) prepareListenerStats(w *tabwriter.Writer) {
 	fmt.Fprintf(w, "Concurrent tasks: \t%d\n", sumTasks)
 	fmt.Fprintf(w, "Connected servers: \t%d\n", totalServers)
 	fmt.Fprintf(w, "Connected users: \t%d\n", totalUsers)
+	fmt.Fprintf(w, "```\n")
 }
 
 func getDurationString(val int) string {
