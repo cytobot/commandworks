@@ -69,7 +69,10 @@ func (p *statsCommandProcessor) prepareWorkerStats(w *tabwriter.Writer) {
 		sumTasks += int(s.TaskCount)
 	}
 
-	avgDuration := sumDuration / len(statuses)
+	var avgDuration int
+	if len(statuses) > 0 {
+		avgDuration = sumDuration / len(statuses)
+	}
 
 	fmt.Fprintf(w, "```\n")
 	fmt.Fprintf(w, "Uptime: \t%s\n", getDurationString(avgDuration))
@@ -97,7 +100,10 @@ func (p *statsCommandProcessor) prepareListenerStats(w *tabwriter.Writer) {
 		sumTasks += int(s.TaskCount)
 	}
 
-	avgDuration := sumDuration / len(statuses)
+	var avgDuration int
+	if len(statuses) > 0 {
+		avgDuration = sumDuration / len(statuses)
+	}
 
 	fmt.Fprintf(w, "```\n")
 	fmt.Fprintf(w, "Uptime: \t%s\n", getDurationString(avgDuration))
