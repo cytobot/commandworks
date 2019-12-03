@@ -2,6 +2,7 @@ package commandworks
 
 import (
 	"fmt"
+	"log"
 
 	pbs "github.com/cytobot/messaging/transport/shared"
 	"github.com/lampjaw/discordclient"
@@ -15,13 +16,16 @@ type command interface {
 }
 
 type CommandHandler struct {
-	commands []command
+	commands      []command
+	managerclient *managerClient
 }
 
-func NewCommandHandler() *CommandHandler {
-	return &CommandHandler{
-		commands: getCommandTypes(),
+func NewCommandHandler(managerEndpoint string) *CommandHandler {
+	handler := &CommandHandler{
+		managerclient: getManagerClient(managerEndpoint),
 	}
+	handler.commands = handler.getCommandTypes()
+	return handler
 }
 
 func (h *CommandHandler) ProcessCommand(client *discordclient.DiscordClient, req *pbs.DiscordWorkRequest) error {
@@ -38,6 +42,17 @@ func (h *CommandHandler) ProcessCommand(client *discordclient.DiscordClient, req
 	return nil
 }
 
+func getManagerClient(managerEndpoint string) *managerClient {
+	client, err := newManagerClient(managerEndpoint)
+	if err != nil {
+		panic(fmt.Sprintf("[Manager client error] %s", err))
+	}
+
+	log.Println("Connected to manager client")
+
+	return client
+}
+
 func (h *CommandHandler) findCommand(commandID string) command {
 	for _, cmd := range h.commands {
 		if cmd.getCommandID() == commandID {
@@ -47,9 +62,10 @@ func (h *CommandHandler) findCommand(commandID string) command {
 	return nil
 }
 
-func getCommandTypes() []command {
+func (h *CommandHandler) getCommandTypes() []command {
 	return []command{
 		newInviteCommandProcessor(),
 		newTwanswateCommandProcessor(),
+		newStatsCommandProcessor(h.managerclient),
 	}
 }
