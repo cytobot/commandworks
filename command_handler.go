@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	cytonats "github.com/cytobot/messaging/nats"
 	pbs "github.com/cytobot/messaging/transport/shared"
 	"github.com/lampjaw/discordclient"
 )
@@ -16,13 +17,15 @@ type command interface {
 }
 
 type CommandHandler struct {
-	commands      []command
-	managerclient *managerClient
+	commands        []command
+	managerClient   *managerClient
+	discordResolver *discordResolver
 }
 
-func NewCommandHandler(managerEndpoint string) *CommandHandler {
+func NewCommandHandler(managerEndpoint string, natsClient *cytonats.NatsClient) *CommandHandler {
 	handler := &CommandHandler{
-		managerclient: getManagerClient(managerEndpoint),
+		managerClient:   getManagerClient(managerEndpoint),
+		discordResolver: newDiscordResolver(natsClient),
 	}
 	handler.commands = handler.getCommandTypes()
 	return handler
@@ -65,7 +68,7 @@ func (h *CommandHandler) findCommand(commandID string) command {
 func (h *CommandHandler) getCommandTypes() []command {
 	return []command{
 		newInviteCommandProcessor(),
-		newTwanswateCommandProcessor(),
-		newStatsCommandProcessor(h.managerclient),
+		newTwanswateCommandProcessor(h.discordResolver),
+		newStatsCommandProcessor(h.managerClient),
 	}
 }

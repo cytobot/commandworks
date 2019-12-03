@@ -9,10 +9,14 @@ import (
 	"github.com/lampjaw/discordclient"
 )
 
-type twanswateCommandProcessor struct{}
+type twanswateCommandProcessor struct {
+	discord *discordResolver
+}
 
-func newTwanswateCommandProcessor() *twanswateCommandProcessor {
-	return &twanswateCommandProcessor{}
+func newTwanswateCommandProcessor(discordResolver *discordResolver) *twanswateCommandProcessor {
+	return &twanswateCommandProcessor{
+		discord: discordResolver,
+	}
 }
 
 func (p *twanswateCommandProcessor) getCommandID() string {
@@ -50,15 +54,16 @@ func (p *twanswateCommandProcessor) process(client *discordclient.DiscordClient,
 		return nil
 	}
 
-	channel, err := client.Channel(req.ChannelID)
-	guild, err := client.Guild(req.GuildID)
+	channel, err := p.discord.ResolveChannel(req.SourceID, req.ChannelID)
+	guild, err := p.discord.ResolveGuild(req.SourceID, req.GuildID)
+	user, err := p.discord.ResolveUser(req.SourceID, previousMessage.UserID(), previousMessage.Channel())
 
 	timestamp, err := previousMessage.Timestamp()
 
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
-			Name:    previousMessage.UserName(),
-			IconURL: previousMessage.UserAvatar(),
+			Name:    user.Username,
+			IconURL: discordgo.EndpointUserAvatar(user.ID, user.Avatar),
 		},
 		Color:       0x070707,
 		Description: translatedText,
