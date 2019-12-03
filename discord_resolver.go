@@ -2,7 +2,6 @@ package commandworks
 
 import (
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -34,16 +33,13 @@ func (r *discordResolver) ResolveChannel(sourceID string, channelID string) (*di
 
 	res := r.getResult(msg)
 
-	isNSFW, _ := strconv.ParseBool(res["NSFW"])
+	rawIn := json.RawMessage(res["channel"])
+	bytes, err := rawIn.MarshalJSON()
 
-	return &discordgo.Channel{
-		ID:            res["ID"],
-		GuildID:       res["GuildID"],
-		Name:          res["Name"],
-		Topic:         res["Topic"],
-		LastMessageID: res["LastMessageId"],
-		NSFW:          isNSFW,
-	}, nil
+	channel := &discordgo.Channel{}
+	json.Unmarshal(bytes, &channel)
+
+	return channel, nil
 }
 
 func (r *discordResolver) ResolveGuild(sourceID string, guildID string) (*discordgo.Guild, error) {
@@ -56,19 +52,13 @@ func (r *discordResolver) ResolveGuild(sourceID string, guildID string) (*discor
 
 	res := r.getResult(msg)
 
-	memberCount, _ := strconv.ParseInt(res["MemberCount"], 10, 64)
-	embedEnabled, _ := strconv.ParseBool(res["EmbedEnabled"])
+	rawIn := json.RawMessage(res["guild"])
+	bytes, err := rawIn.MarshalJSON()
 
-	return &discordgo.Guild{
-		ID:           res["ID"],
-		Name:         res["Name"],
-		Icon:         res["Icon"],
-		OwnerID:      res["OwnerID"],
-		JoinedAt:     discordgo.Timestamp(res["JoinedAt"]),
-		MemberCount:  int(memberCount),
-		EmbedEnabled: embedEnabled,
-		Description:  res["Description"],
-	}, nil
+	guild := &discordgo.Guild{}
+	json.Unmarshal(bytes, &guild)
+
+	return guild, nil
 }
 
 func (r *discordResolver) ResolveUser(sourceID string, userID string, channelID string) (*discordgo.User, error) {
@@ -82,11 +72,13 @@ func (r *discordResolver) ResolveUser(sourceID string, userID string, channelID 
 
 	res := r.getResult(msg)
 
-	return &discordgo.User{
-		ID:       res["ID"],
-		Username: res["Username"],
-		Avatar:   res["Avatar"],
-	}, nil
+	rawIn := json.RawMessage(res["user"])
+	bytes, err := rawIn.MarshalJSON()
+
+	user := &discordgo.User{}
+	json.Unmarshal(bytes, &user)
+
+	return user, nil
 }
 
 func (r *discordResolver) getResult(msg *nats.Msg) map[string]string {
